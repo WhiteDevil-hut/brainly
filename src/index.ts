@@ -65,20 +65,24 @@ app.post("/api/v1/content",middleware,async (req,res)=>{
     });
     return res.status(201).json({message:"content created",content});
 });
-app.get("/api/v1/content",middleware,async (requestAnimationFrame,res)=>{
-    try{
+app.get("/api/v1/content", middleware, async (req, res) => {
+    try {
         //@ts-ignore
-        const userId=req.userid;
-        const userexist=await ContentModel.findOne({
-            userId
-        })
-        res.status(200).json(userexist)
-    }
-    catch(error){
+        const userId = req.userid;
+        const contents = await ContentModel.find({ userId });
+
+        // If content is not found, return an appropriate message
+        if (!contents) {
+            return res.status(404).json({ message: "No content found for this user" });
+        }
+
+        res.status(200).json(contents);
+    } catch (error) {
         console.error(error);
-        return res.status(500).json({message:"Internal server error"});
+        return res.status(500).json({ message: "Internal server error" });
     }
-})
+});
+
 app.delete("/api/v1/content",middleware,async(req,res)=>{
   try {
     //@ts-ignore
@@ -94,7 +98,7 @@ app.delete("/api/v1/content",middleware,async(req,res)=>{
   }
 });
 app.post("/api/v1/brain/share",(req,res)=>{
-
+    
 })
 app.get("/api/v1/brain/:shareLink",(req,res)=>{
 
