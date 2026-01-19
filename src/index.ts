@@ -1,8 +1,9 @@
 import express from "express";
 import jwt from "jsonwebtoken";
-import { UserModel,ContentModel } from "./db.js";
+import { UserModel,ContentModel,LinkModel } from "./db.js";
 import bcrypt from 'bcrypt';
 import { middleware } from "./middleware.js";
+import { random } from "./utils.js";
 const JWT_KEY="Hello";
 const app=express();
 app.use(express.json());
@@ -97,11 +98,64 @@ app.delete("/api/v1/content",middleware,async(req,res)=>{
     res.status(500).json({ message: "Server error" });
   }
 });
-app.post("/api/v1/brain/share",(req,res)=>{
-    
-})
-app.get("/api/v1/brain/:shareLink",(req,res)=>{
+app.post("/api/v1/brain/share",middleware,async (req,res)=>{
+   const share=req.body.share;
+    if(share ){
+        const existinglink=await LinkModel.findOne({
+            //@ts-ignore
+            userId:req.userid
+        });
+        if(existinglink){
+            res.json({
+                hash:existinglink.hash
+            })
+            return;
+        }
+        const hash=random(10);
 
+        await LinkModel.create({
+            //@ts-ignore
+            userId:req.userid,
+            hash
+        })
+        res.json({
+            hash
+        })
+    }
+    else{
+        await LinkModel.deleteOne({
+            //@ts-ignore
+            userId:req.userid
+        });
+    }
+})
+app.get("/api/v1/brain/:shareLink",async (req,res)=>{
+    const hash=req.params.shareLink;
+    const link= await LinkModel.findOne({
+        hash
+    });
+    if(!link){
+        res.status(411).json({
+            message:"Sorry incorrect input"
+        })
+        return;
+    }
+    //userId
+    const content=await ContentModel.find({
+        userId:link.userId
+    })
+    const user=await UserModel.findOne({
+            _id:link.userId 
+        })
+    if(!user){
+            return res.status(411).json({
+                message:"Sorry user not found"
+            });
+    }
+    res.json({
+        username:user.username,
+        content:content
+    })
 })
 app.listen(3000,()=>{
     console.log("Server is running on localhost:3000")

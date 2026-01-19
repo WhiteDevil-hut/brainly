@@ -20,7 +20,7 @@ const contentschema =new Schema({
 
 const linkschema=new Schema({
   hash:{type:String,required:true },
-  userId:{type:Schema.Types.ObjectId,ref:'User',required:true}
+  userId:{type:Schema.Types.ObjectId,ref:'User',required:true,unique:true}
 });
 
 export const UserModel=mongoose.model('User',userschema);
